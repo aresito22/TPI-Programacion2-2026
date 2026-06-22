@@ -15,15 +15,15 @@ public class UsuarioService {
     public void crearUsuario(String nombre, String apellido, String mail, String celular, String contrasena, Rol rol) {
 
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre no puede estar vacío.");
+            throw new IllegalArgumentException("El nombre no puede estar vacio.");
         }
 
         if (apellido == null || apellido.isBlank()) {
-            throw new IllegalArgumentException("El apellido no puede estar vacío.");
+            throw new IllegalArgumentException("El apellido no puede estar vacio.");
         }
 
         if (mail == null || mail.isBlank()) {
-            throw new IllegalArgumentException("El mail no puede estar vacío.");
+            throw new IllegalArgumentException("El mail no puede estar vacio.");
         }
 
         if (usuarioDAO.findByMail(mail).isPresent()) {
@@ -39,12 +39,16 @@ public class UsuarioService {
         return usuarioDAO.findAll();
     }
 
+    public Optional<Usuario> buscarPorId(Long id) {
+        return usuarioDAO.findById(id);
+    }
+
     public void editarUsuario(Long id, String nombre, String apellido, String mail, String celular, String contrasena, Rol rol) {
 
         Optional<Usuario> optional = usuarioDAO.findById(id);
 
         if (optional.isEmpty()) {
-            throw new EntityNotFoundException("No se encontró usuario con ID: " + id);
+            throw new EntityNotFoundException("No se encontro usuario con ID: " + id);
         }
 
         Usuario usuario = optional.get();
@@ -88,7 +92,8 @@ public class UsuarioService {
 
         Optional<Usuario> optional = usuarioDAO.findById(id);
 
-        if (optional.isEmpty()) {throw new EntityNotFoundException("No se encontró usuario con ID: " + id);
+        if (optional.isEmpty()) {
+            throw new EntityNotFoundException("No se encontro usuario con ID: " + id);
         }
 
         usuarioDAO.delete(id);

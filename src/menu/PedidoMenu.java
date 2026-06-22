@@ -7,38 +7,22 @@ import entities.Usuario;
 import enums.Estado;
 import enums.FormaPago;
 import service.PedidoService;
+import service.ProductoService;
+import service.UsuarioService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class PedidoMenu {
 
     private final PedidoService pedidoService = new PedidoService();
+    private final UsuarioService usuarioService = new UsuarioService();
+    private final ProductoService productoService = new ProductoService();
     private final Scanner scanner;
-
-    private Usuario usuarioFake;
-    private Producto productoFake1;
-    private Producto productoFake2;
 
     public PedidoMenu(Scanner scanner) {
         this.scanner = scanner;
-        inicializarDatosFake();
-    }
-
-    private void inicializarDatosFake() {
-        usuarioFake = new Usuario();
-        usuarioFake.setId(1L);
-        usuarioFake.setNombre("Gabriel Dennis");
-
-        this.productoFake1 = new Producto();
-        productoFake1.setId(1L);
-        productoFake1.setNombre("Dennis burger");
-        this.productoFake1.setPrecio(200.0);
-
-        this.productoFake2 = new Producto();
-        productoFake2.setId(2L);
-        productoFake2.setNombre("Dennis pizza");
-        this.productoFake2.setPrecio(300.0);
     }
 
     public void mostrar() {
@@ -46,7 +30,7 @@ public class PedidoMenu {
         while (opcion != 0) {
             System.out.println("\n=== PEDIDOS ===");
             System.out.println("1. Listar");
-            System.out.println("2. Crear Pedido Simulado");
+            System.out.println("2. Crear Pedido");
             System.out.println("3. Editar Estado");
             System.out.println("4. Eliminar");
             System.out.println("0. Volver");
@@ -55,17 +39,17 @@ public class PedidoMenu {
             try {
                 opcion = Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("Opción inválida.");
+                System.out.println("Opcion invalida.");
                 continue;
             }
 
             switch (opcion) {
                 case 1 -> listar();
-                case 2 -> crearSimulado();
+                case 2 -> crear();
                 case 3 -> editar();
                 case 4 -> eliminar();
                 case 0 -> System.out.println("Volviendo...");
-                default -> System.out.println("Opción inválida.");
+                default -> System.out.println("Opcion invalida.");
             }
         }
     }
@@ -81,23 +65,82 @@ public class PedidoMenu {
         }
     }
 
-    private void crearSimulado() {
-        System.out.println("\n--- Creando Pedido de Prueba Hardcodeado ---");
+    private void crear() {
+        System.out.println("\n--- Usuarios disponibles ---");
+        usuarioService.listarUsuarios().forEach(System.out::println);
+        System.out.print("ID de usuario: ");
+        Long usuarioId;
         try {
-            Pedido p = new Pedido();
-            p.setUsuario(usuarioFake);
-            p.setFormaPago(FormaPago.EFECTIVO);
+            usuarioId = Long.parseLong(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("ID invalido.");
+            return;
+        }
 
-            DetallePedido d1 = new DetallePedido(2, productoFake1);
-            DetallePedido d2 = new DetallePedido(1, productoFake2);
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(usuarioId);
+        if (usuarioOpt.isEmpty()) {
+            System.out.println("Usuario no encontrado.");
+            return;
+        }
 
-            p.addDetallePedido(d1);
-            p.addDetallePedido(d2);
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(usuarioOpt.get());
 
-            pedidoService.crearPedido(p);
-            System.out.println("¡Pedido registrado con éxito en MySQL!");
-            System.out.println("Total calculado automáticamente: $" + p.getTotal());
+        System.out.print("Forma de pago (TARJETA/TRANSFERENCIA/EFECTIVO): ");
+        try {
+            pedido.setFormaPago(FormaPago.valueOf(scanner.nextLine().trim().toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Forma de pago invalida.");
+            return;
+        }
 
+        boolean agregarMas = true;
+        while (agregarMas) {
+            System.out.println("\n--- Productos disponibles ---");
+            productoService.listarProductos().forEach(System.out::println);
+            System.out.print("ID de producto: ");
+            Long productoId;
+            try {
+                productoId = Long.parseLong(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("ID invalido.");
+                continue;
+            }
+
+            Optional<Producto> productoOpt = productoService.buscarPorId(productoId);
+            if (productoOpt.isEmpty()) {
+                System.out.println("Producto no encontrado.");
+                continue;
+            }
+
+            System.out.print("Cantidad: ");
+            int cantidad;
+            try {
+                cantidad = Integer.parseInt(scanner.nextLine().trim());
+                if (cantidad <= 0) {
+                    System.out.println("La cantidad debe ser mayor a 0.");
+                    continue;
+                }
+                if (cantidad > productoOpt.get().getStock()) {
+                    System.out.println("Stock insuficiente. Stock disponible: " + productoOpt.get().getStock());
+                    continue;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Cantidad invalida.");
+                continue;
+            }
+
+            DetallePedido detalle = new DetallePedido(cantidad, productoOpt.get());
+            pedido.addDetallePedido(detalle);
+
+            System.out.print("Agregar otro producto (S/N): ");
+            agregarMas = scanner.nextLine().trim().equalsIgnoreCase("S");
+        }
+
+        try {
+            pedidoService.crearPedido(pedido);
+            System.out.println("Pedido registrado con exito.");
+            System.out.println("Total calculado: $" + pedido.getTotal());
         } catch (RuntimeException e) {
             System.out.println("Error al crear pedido: " + e.getMessage());
         }
@@ -117,14 +160,14 @@ public class PedidoMenu {
                 if (!estadoTexto.isBlank()) {
                     p.setEstado(Estado.valueOf(estadoTexto));
                     pedidoService.editarPedido(p);
-                    System.out.println("¡Estado actualizado con éxito!");
+                    System.out.println("Estado actualizado con exito.");
                 }
             }, () -> System.out.println("Pedido no encontrado."));
 
         } catch (NumberFormatException e) {
-            System.out.println("ID inválido.");
+            System.out.println("ID invalido.");
         } catch (IllegalArgumentException e) {
-            System.out.println("Error: Estado inválido.");
+            System.out.println("Error: Estado invalido.");
         }
     }
 
@@ -133,16 +176,16 @@ public class PedidoMenu {
         System.out.print("ID a eliminar: ");
         try {
             Long id = Long.parseLong(scanner.nextLine().trim());
-            System.out.print("¿Confirma? (S/N): ");
+            System.out.print("Confirma (S/N): ");
             String confirmacion = scanner.nextLine().trim();
             if (confirmacion.equalsIgnoreCase("S")) {
                 pedidoService.eliminarPedido(id);
-                System.out.println("Pedido dado de baja de manera lógica.");
+                System.out.println("Pedido dado de baja de manera logica.");
             } else {
-                System.out.println("Operación cancelada.");
+                System.out.println("Operacion cancelada.");
             }
         } catch (NumberFormatException e) {
-            System.out.println("ID inválido.");
+            System.out.println("ID invalido.");
         }
     }
 }

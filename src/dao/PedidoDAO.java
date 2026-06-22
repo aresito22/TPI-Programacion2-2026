@@ -2,6 +2,7 @@ package dao;
 
 import config.ConexionDB;
 import entities.Pedido;
+import entities.Usuario;
 import enums.Estado;
 import enums.FormaPago;
 
@@ -31,25 +32,22 @@ public class PedidoDAO implements IBaseDAO<Pedido> {
 
                 psPedido.executeUpdate();
 
-
                 ResultSet keys = psPedido.getGeneratedKeys();
                 if (keys.next()) {
                     pedido.setId(keys.getLong(1));
                 }
             }
 
-
             try (PreparedStatement psDetalle = con.prepareStatement(sqlDetalle)) {
                 for (var detalle : pedido.getDetalles()) {
                     psDetalle.setInt(1, detalle.getCantidad());
                     psDetalle.setDouble(2, detalle.getSubtotal());
-                    psDetalle.setLong(3, pedido.getId()); // Clave foránea vinculada
+                    psDetalle.setLong(3, pedido.getId());
                     psDetalle.setLong(4, detalle.getProducto().getId());
                     psDetalle.addBatch();
                 }
                 psDetalle.executeBatch();
             }
-
 
             con.commit();
 
@@ -69,7 +67,7 @@ public class PedidoDAO implements IBaseDAO<Pedido> {
                     con.setAutoCommit(true);
                     con.close();
                 } catch (SQLException e) {
-                    System.out.println("Error al cerrar conexión: " + e.getMessage());
+                    System.out.println("Error al cerrar conexion: " + e.getMessage());
                 }
             }
         }
@@ -92,6 +90,11 @@ public class PedidoDAO implements IBaseDAO<Pedido> {
                 p.setTotal(rs.getDouble("total"));
                 p.setFormaPago(FormaPago.valueOf(rs.getString("forma_pago")));
                 p.setEliminado(rs.getBoolean("eliminado"));
+
+                Usuario usuario = new Usuario();
+                usuario.setId(rs.getLong("usuario_id"));
+                p.setUsuario(usuario);
+
                 return Optional.of(p);
             }
 
@@ -117,6 +120,11 @@ public class PedidoDAO implements IBaseDAO<Pedido> {
                 p.setTotal(rs.getDouble("total"));
                 p.setFormaPago(FormaPago.valueOf(rs.getString("forma_pago")));
                 p.setEliminado(rs.getBoolean("eliminado"));
+
+                Usuario usuario = new Usuario();
+                usuario.setId(rs.getLong("usuario_id"));
+                p.setUsuario(usuario);
+
                 lista.add(p);
             }
 
@@ -154,7 +162,7 @@ public class PedidoDAO implements IBaseDAO<Pedido> {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error al dar de baja lógica al pedido: " + e.getMessage());
+            throw new RuntimeException("Error al dar de baja logica al pedido: " + e.getMessage());
         }
     }
 }

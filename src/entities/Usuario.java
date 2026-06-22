@@ -76,12 +76,6 @@ public class Usuario extends Base{
 
     @Override
     public String toString() {
-        return "Usuario{" +
-                "id=" + getId() +
-                ", nombre='" + nombre + '\'' +
-                ", apellido='" + apellido + '\'' +
-                ", mail='" + mail + '\'' +
-                ", rol=" + rol +
-                '}';
+        return String.format("[%d] %s %s - %s | Rol: %s", getId(), nombre, apellido, mail, rol);
     }
 }

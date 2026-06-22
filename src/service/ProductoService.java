@@ -41,6 +41,10 @@ public class ProductoService {
         return productoDAO.findByCategoria(categoriaId);
     }
 
+    public Optional<Producto> buscarPorId(Long id) {
+        return productoDAO.findById(id);
+    }
+
     public void editarProducto(Long id, String nombre, String descripcion, Double precio, Integer stock, String imagen, Boolean disponible, Long categoriaId) {
         Optional<Producto> optional = productoDAO.findById(id);
         if (optional.isEmpty()) {

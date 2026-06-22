@@ -24,13 +24,13 @@ public class ProductoDAO implements IBaseDAO<Producto> {
         p.setEliminado(rs.getBoolean("eliminado"));
         p.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
 
-        Categoria categoria = new Categoria();
-        categoria.setId(rs.getLong("categoria_id"));
+        Long categoriaId = rs.getLong("categoria_id");
+        CategoriaDAO categoriaDAO = new CategoriaDAO();
+        Categoria categoria = categoriaDAO.findById(categoriaId).orElse(null);
         p.setCategoria(categoria);
 
         return p;
     }
-
     @Override
     public void save(Producto producto) {
         String sql = "INSERT INTO producto (nombre, descripcion, precio, stock, imagen, disponible, categoria_id) VALUES (?, ?, ?, ?, ?, ?, ?)";

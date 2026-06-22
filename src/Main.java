@@ -1,4 +1,5 @@
 import menu.CategoriaMenu;
+import menu.PedidoMenu;
 import menu.ProductoMenu;
 import menu.UsuarioMenu;
 
@@ -29,7 +30,7 @@ public class Main {
                 case 1 -> new CategoriaMenu(scanner).mostrar();
                 case 2 -> new ProductoMenu(scanner).mostrar();
                 case 3 -> new UsuarioMenu(scanner).mostrar();
-                case 4 -> System.out.println("Modulo de pedidos pendiente.");
+                case 4 -> new PedidoMenu(scanner).mostrar();
                 case 0 -> System.out.println("Saliendo...");
                 default -> System.out.println("Opcion invalida.");
             }
