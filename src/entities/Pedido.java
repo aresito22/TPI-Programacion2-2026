@@ -26,7 +26,6 @@ public class Pedido {
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
     public double getTotal() {
-        calcularTotal();
         return total;
     }
     public void setTotal(double total) { this.total = total; }
