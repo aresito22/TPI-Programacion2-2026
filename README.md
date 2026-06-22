@@ -88,3 +88,7 @@ src/
 - El mail de usuario es unico.
 - Todas las bajas son logicas (campo `eliminado`), nunca se borra un registro fisicamente.
 - La creacion de un pedido con sus detalles se realiza dentro de una transaccion JDBC: si falla la insercion de un detalle, se revierte el pedido completo (rollback).
+
+## Enlace a repositorio de GitHub
+
+https://github.com/aresito22/TPI-Programacion2-2026
